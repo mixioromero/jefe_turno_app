@@ -221,3 +221,55 @@ textarea { resize: vertical; min-height: 112px; }
   .record-item { grid-template-columns: 1fr; gap: 4px; }
   .btn.ghost { align-self: flex-start; }
 }
+
+
+.bloqueos-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.bloqueo-card {
+  padding: 1rem;
+}
+
+.bloqueo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.bloqueo-head h3 {
+  margin: 0 0 0.2rem;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.status-pill.is-blocked {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+.status-pill.is-clear {
+  background: rgba(22, 163, 74, 0.12);
+  color: #166534;
+}
+
+.bloqueo-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.small-text {
+  font-size: 0.88rem;
+}
