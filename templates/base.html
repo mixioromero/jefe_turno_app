@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b2239">
   <title>{{ title if title else 'Panel Jefe de Turno' }}</title>
   <link rel="manifest" href="{{ url_for('manifest') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=3">
 </head>
 <body>
   <header class="topbar">
@@ -17,6 +17,7 @@
     </div>
     <a class="btn ghost" href="{{ url_for('index') }}">Inicio</a>
   </header>
+
   <main class="container">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -25,11 +26,19 @@
         {% endfor %}
       {% endif %}
     {% endwith %}
+
     {% block content %}{% endblock %}
   </main>
+
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js'));
+      window.addEventListener('load', async () => {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          await reg.unregister();
+        }
+        navigator.serviceWorker.register('/service-worker.js');
+      });
     }
   </script>
 </body>
