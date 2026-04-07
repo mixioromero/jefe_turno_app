@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jefe-turno-v1';
+const CACHE_NAME = 'jefe-turno-v2';
 const URLS = [
   '/',
   '/manifest.webmanifest',
