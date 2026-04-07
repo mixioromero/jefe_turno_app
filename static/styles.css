@@ -273,3 +273,237 @@ textarea { resize: vertical; min-height: 112px; }
 .small-text {
   font-size: 0.88rem;
 }
+
+
+.bloqueos-hero {
+  gap: 14px;
+}
+
+.bloqueos-hero-head h2 {
+  margin: 0 0 6px;
+}
+
+.bloqueos-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(246,249,252,0.98));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 6px;
+}
+
+.summary-card strong {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.summary-label {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.summary-card small {
+  color: var(--muted);
+}
+
+.summary-card.danger {
+  border-color: rgba(185, 28, 28, 0.18);
+  background: linear-gradient(180deg, rgba(254,242,242,0.95), #fff);
+}
+
+.summary-card.success {
+  border-color: rgba(22, 101, 52, 0.18);
+  background: linear-gradient(180deg, rgba(240,253,244,0.95), #fff);
+}
+
+.bloqueos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.bloqueo-card {
+  position: relative;
+  overflow: hidden;
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.bloqueo-card.is-blocked {
+  border: 1px solid rgba(185, 28, 28, 0.18);
+}
+
+.bloqueo-card.is-clear {
+  border: 1px solid rgba(22, 101, 52, 0.18);
+}
+
+.bloqueo-accent {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 8px;
+  border-radius: 20px 0 0 20px;
+  background: #94a3b8;
+}
+
+.bloqueo-card.is-blocked .bloqueo-accent {
+  background: linear-gradient(180deg, #ef4444, #b91c1c);
+}
+
+.bloqueo-card.is-clear .bloqueo-accent {
+  background: linear-gradient(180deg, #22c55e, #15803d);
+}
+
+.bloqueo-head {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.bloqueo-title-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.bloqueo-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+
+.bloqueo-head h3 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.bloqueo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: #eef4fa;
+  color: #284256;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.meta-chip.soft {
+  background: #f4f7fb;
+  color: #526679;
+}
+
+.status-pill {
+  min-width: 122px;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+}
+
+.bloqueo-layout {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.estado-field label,
+.motivo-field label {
+  margin-bottom: 8px;
+}
+
+.select-shell {
+  border-radius: 14px;
+  padding: 4px;
+  background: #f4f7fb;
+}
+
+.select-shell.is-blocked {
+  background: rgba(254, 226, 226, 0.7);
+}
+
+.select-shell.is-clear {
+  background: rgba(220, 252, 231, 0.8);
+}
+
+.select-shell select {
+  border: none;
+  background: transparent;
+  font-weight: 700;
+}
+
+.motivo-field textarea {
+  min-height: 132px;
+  background: #fcfdff;
+}
+
+.field-help {
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.bloqueo-actions {
+  margin-top: 4px;
+}
+
+.bloqueo-actions .btn {
+  min-height: 50px;
+  border-radius: 14px;
+  box-shadow: 0 10px 20px rgba(13, 110, 253, 0.18);
+}
+
+@media (max-width: 900px) {
+  .bloqueos-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .bloqueos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bloqueo-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .bloqueo-card {
+    padding: 16px 14px 14px 16px;
+    border-radius: 18px;
+  }
+
+  .bloqueo-head {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .status-pill {
+    min-width: 0;
+    align-self: flex-start;
+  }
+
+  .bloqueo-head h3 {
+    font-size: 20px;
+  }
+
+  .summary-card strong {
+    font-size: 26px;
+  }
+}
