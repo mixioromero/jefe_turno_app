@@ -205,19 +205,90 @@ def get_default_value(header, ws=None):
     return ''
 
 
+def bloqueo_estado_ui(value):
+    estado = str(value or '').strip().lower()
+    return 'Bloqueado' if estado in {'activo', 'bloqueado', 'sí', 'si'} else 'No bloqueado'
+
+
+def bloqueo_estado_excel(value):
+    return 'Activo' if value == 'Bloqueado' else 'Liberado'
+
+
+def bloqueo_badge_class(value):
+    return 'is-blocked' if value == 'Bloqueado' else 'is-clear'
+
+
+def bloqueos_rows(ws):
+    headers = get_headers(ws)
+    idx = {header: headers.index(header) + 1 for header in headers}
+    rows = []
+    for row_num in range(2, ws.max_row + 1):
+        equipo = ws.cell(row_num, idx['Equipo']).value
+        area = ws.cell(row_num, idx['Área']).value
+        if not equipo and not area:
+            continue
+        estado_ui = bloqueo_estado_ui(ws.cell(row_num, idx['Estado']).value)
+        rows.append({
+            'row_num': row_num,
+            'area': area or 'Sin área',
+            'equipo': equipo or 'Sin equipo',
+            'tipo_bloqueo': ws.cell(row_num, idx['Tipo bloqueo']).value or '',
+            'responsable': ws.cell(row_num, idx['Responsable']).value or '',
+            'estado_ui': estado_ui,
+            'estado_badge': bloqueo_badge_class(estado_ui),
+            'motivo': ws.cell(row_num, idx['Motivo']).value or '',
+        })
+    return rows
+
+
 @app.route('/')
 def index():
     wb = load_wb()
     counts = dashboard_counts(wb)
     modules = []
     for sheet_name, cfg in SHEETS_CONFIG.items():
+        href = url_for('bloqueos_activos') if sheet_name == 'Bloqueos Activos' else url_for('form_sheet', sheet_name=sheet_name)
         modules.append({
             'sheet_name': sheet_name,
             'title': cfg['title'],
             'icon': cfg['icon'],
             'count': counts.get(sheet_name, ''),
+            'href': href,
         })
     return render_template('index.html', modules=modules)
+
+
+@app.route('/bloqueos-activos', methods=['GET', 'POST'])
+def bloqueos_activos():
+    wb = load_wb()
+    ws = wb['Bloqueos Activos']
+    headers = get_headers(ws)
+    idx_estado = headers.index('Estado') + 1
+    idx_motivo = headers.index('Motivo') + 1
+    idx_hora_liberacion = headers.index('Hora liberación') + 1
+
+    if request.method == 'POST':
+        row_num = int(request.form.get('row_num'))
+        estado_ui = request.form.get('estado_ui', 'No bloqueado')
+        motivo = (request.form.get('motivo') or '').strip()
+
+        ws.cell(row_num, idx_estado, bloqueo_estado_excel(estado_ui))
+        ws.cell(row_num, idx_motivo, motivo if motivo else None)
+        if estado_ui == 'No bloqueado':
+            ws.cell(row_num, idx_hora_liberacion, datetime.now().time().replace(second=0, microsecond=0))
+        else:
+            ws.cell(row_num, idx_hora_liberacion, None)
+
+        wb.save(EXCEL_PATH)
+        flash('Bloqueo actualizado correctamente.', 'success')
+        return redirect(url_for('bloqueos_activos'))
+
+    return render_template(
+        'bloqueos.html',
+        title='Bloqueos Activos',
+        icon='🔒',
+        rows=bloqueos_rows(ws),
+    )
 
 
 @app.route('/form/<path:sheet_name>', methods=['GET', 'POST'])
@@ -276,8 +347,3 @@ def service_worker():
 @app.route('/health')
 def health():
     return {'status': 'ok'}
-
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', '5000'))
-    app.run(debug=True, host='0.0.0.0', port=port)
