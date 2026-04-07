@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: jefe-turno-puerto
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: APP_SECRET_KEY
+        generateValue: true
