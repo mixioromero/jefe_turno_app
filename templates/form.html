@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="module-top">
+  <a class="back-link" href="{{ url_for('index') }}">← Volver</a>
+  <h2>{{ icon }} {{ title }}</h2>
+</section>
+
+<section class="mobile-stack">
+  <div class="panel form-panel">
+    <form method="post" class="form-grid">
+      {% for field in fields %}
+      <div class="field {% if field.type == 'textarea' %}full{% endif %}">
+        <label for="{{ field.name }}">{{ field.label }}</label>
+        {% if field.options %}
+          <select id="{{ field.name }}" name="{{ field.name }}">
+            <option value=""></option>
+            {% for option in field.options %}
+            <option value="{{ option }}" {% if option == field.default %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+        {% elif field.type == 'textarea' %}
+          <textarea id="{{ field.name }}" name="{{ field.name }}" rows="4" placeholder="Ingresa {{ field.label|lower }}">{{ field.default }}</textarea>
+        {% else %}
+          <input id="{{ field.name }}" name="{{ field.name }}" type="{{ 'text' if field.type == 'autonumber' else field.type }}" value="{{ field.default }}" {% if field.readonly %}readonly{% endif %}>
+        {% endif %}
+      </div>
+      {% endfor %}
+      <div class="actions full sticky-actions">
+        <button class="btn" type="submit">Guardar registro</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel recent-panel">
+    <div class="section-head">
+      <h3>Últimos registros</h3>
+      <span class="muted">Vista rápida</span>
+    </div>
+
+    <div class="records-list">
+      {% for row in rows %}
+      <article class="record-card">
+        {% for key, value in row.items() %}
+          {% if value not in (None, '') %}
+          <div class="record-item">
+            <span class="record-key">{{ key }}</span>
+            <span class="record-value">{{ value }}</span>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </article>
+      {% else %}
+      <p class="muted">Todavía no hay registros para mostrar.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
