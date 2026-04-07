@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="module-top">
+  <a class="back-link" href="{{ url_for('index') }}">← Volver</a>
+  <h2>{{ icon }} {{ title }}</h2>
+  <p class="muted">Aquí solo ves si el equipo está bloqueado o no, y puedes cambiar el motivo.</p>
+</section>
+
+<section class="records-list bloqueos-list">
+  {% for row in rows %}
+  <article class="record-card bloqueo-card">
+    <div class="bloqueo-head">
+      <div>
+        <h3>{{ row.equipo }}</h3>
+        <p class="muted">{{ row.area }}{% if row.tipo_bloqueo %} · {{ row.tipo_bloqueo }}{% endif %}</p>
+      </div>
+      <span class="status-pill {{ row.estado_badge }}">{{ row.estado_ui }}</span>
+    </div>
+
+    <form method="post" class="bloqueo-form">
+      <input type="hidden" name="row_num" value="{{ row.row_num }}">
+
+      <div class="field">
+        <label for="estado_{{ row.row_num }}">Estado</label>
+        <select id="estado_{{ row.row_num }}" name="estado_ui">
+          <option value="Bloqueado" {% if row.estado_ui == 'Bloqueado' %}selected{% endif %}>Bloqueado</option>
+          <option value="No bloqueado" {% if row.estado_ui == 'No bloqueado' %}selected{% endif %}>No bloqueado</option>
+        </select>
+      </div>
+
+      <div class="field full">
+        <label for="motivo_{{ row.row_num }}">Motivo del bloqueo</label>
+        <textarea id="motivo_{{ row.row_num }}" name="motivo" rows="3" placeholder="Describe por qué está bloqueado o agrega contexto">{{ row.motivo }}</textarea>
+      </div>
+
+      {% if row.responsable %}
+      <p class="muted small-text">Responsable: {{ row.responsable }}</p>
+      {% endif %}
+
+      <div class="actions sticky-actions">
+        <button class="btn" type="submit">Guardar cambios</button>
+      </div>
+    </form>
+  </article>
+  {% else %}
+  <p class="muted">No hay equipos cargados en Bloqueos Activos.</p>
+  {% endfor %}
+</section>
+{% endblock %}

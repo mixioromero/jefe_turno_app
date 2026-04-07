@@ -14,7 +14,7 @@
 
 <section class="grid mobile-grid">
   {% for module in modules %}
-  <a class="card module-card" href="{{ url_for('form_sheet', sheet_name=module.sheet_name) }}">
+  <a class="card module-card" href="{{ module.href }}">
     <div class="module-head">
       <div class="module-icon">{{ module.icon }}</div>
       <div class="module-count">{{ module.count }}</div>
