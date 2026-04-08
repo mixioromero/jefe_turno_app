@@ -220,10 +220,10 @@ def bloqueo_badge_class(value):
 
 def bloqueo_bucket(area):
     area_text = str(area or '').strip().lower()
-    if 'embarque' in area_text:
-        return 'Embarque'
     if 'desembarque' in area_text:
         return 'Desembarque'
+    if 'embarque' in area_text:
+        return 'Embarque'
     return 'Otros'
 
 
@@ -246,6 +246,9 @@ def bloqueos_rows(ws):
         estado_ui = bloqueo_estado_ui(ws.cell(row_num, idx['Estado']).value)
         tipo_bloqueo = ws.cell(row_num, idx['Tipo bloqueo']).value or ''
         personal = 'Eléctrico' if str(tipo_bloqueo).strip().lower() in {'', 'mecánico', 'mecanico'} else str(tipo_bloqueo)
+        motivo = ws.cell(row_num, idx['Motivo']).value or ''
+        obs = ws.cell(row_num, idx['Obs']).value or ''
+        comentario = motivo or obs or 'Sin comentario registrado'
         rows.append({
             'row_num': row_num,
             'bucket': bloqueo_bucket(area),
@@ -256,8 +259,9 @@ def bloqueos_rows(ws):
             'responsable': ws.cell(row_num, idx['Responsable']).value or '',
             'estado_ui': estado_ui,
             'estado_badge': bloqueo_badge_class(estado_ui),
-            'motivo': ws.cell(row_num, idx['Motivo']).value or '',
-            'obs': ws.cell(row_num, idx['Obs']).value or '',
+            'motivo': motivo,
+            'obs': obs,
+            'comentario': comentario,
         })
     return rows
 
