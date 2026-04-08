@@ -1,58 +1,319 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="module-top">
-  <a class="back-link" href="{{ url_for('index') }}">← Volver</a>
-  <h2>{{ icon }} {{ title }}</h2>
-</section>
-
-<section class="mobile-stack">
-  <div class="panel form-panel">
-    <form method="post" class="form-grid">
-      {% for field in fields %}
-      <div class="field {% if field.type == 'textarea' %}full{% endif %}">
-        <label for="{{ field.name }}">{{ field.label }}</label>
-        {% if field.options %}
-          <select id="{{ field.name }}" name="{{ field.name }}">
-            <option value=""></option>
-            {% for option in field.options %}
-            <option value="{{ option }}" {% if option == field.default %}selected{% endif %}>{{ option }}</option>
-            {% endfor %}
-          </select>
-        {% elif field.type == 'textarea' %}
-          <textarea id="{{ field.name }}" name="{{ field.name }}" rows="4" placeholder="Ingresa {{ field.label|lower }}">{{ field.default }}</textarea>
-        {% else %}
-          <input id="{{ field.name }}" name="{{ field.name }}" type="{{ 'text' if field.type == 'autonumber' else field.type }}" value="{{ field.default }}" {% if field.readonly %}readonly{% endif %}>
-        {% endif %}
-      </div>
-      {% endfor %}
-      <div class="actions full sticky-actions">
-        <button class="btn" type="submit">Guardar registro</button>
-      </div>
-    </form>
+<section class="module-page-header panel">
+  <div class="module-top-actions">
+    <a class="back-link" href="{{ url_for('index') }}">← Volver</a>
   </div>
-
-  <div class="panel recent-panel">
-    <div class="section-head">
-      <h3>Últimos registros</h3>
-      <span class="muted">Vista rápida</span>
+  <div class="module-header-grid">
+    <div>
+      <div class="module-heading-badge">{{ icon }} {{ title }}</div>
+      <h2>{{ title }}</h2>
+      <p class="muted">Registra nuevos antecedentes, busca historial, edita registros existentes y aplica cierre rápido cuando corresponda.</p>
     </div>
-
-    <div class="records-list">
-      {% for row in rows %}
-      <article class="record-card">
-        {% for key, value in row.items() %}
-          {% if value not in (None, '') %}
-          <div class="record-item">
-            <span class="record-key">{{ key }}</span>
-            <span class="record-value">{{ value }}</span>
-          </div>
-          {% endif %}
-        {% endfor %}
+    <div class="module-stats-grid">
+      <article class="mini-stat-card brand">
+        <span>Total</span>
+        <strong>{{ stats.total }}</strong>
       </article>
-      {% else %}
-      <p class="muted">Todavía no hay registros para mostrar.</p>
-      {% endfor %}
+      <article class="mini-stat-card warn">
+        <span>Pendientes</span>
+        <strong>{{ stats.open }}</strong>
+      </article>
+      <article class="mini-stat-card success">
+        <span>Cerrados</span>
+        <strong>{{ stats.closed }}</strong>
+      </article>
     </div>
   </div>
 </section>
+
+<section class="module-layout-pro">
+  <aside class="panel module-sidebar">
+    <div class="section-head compact-head">
+      <div>
+        <h3>Nuevo registro</h3>
+        <p class="muted">Completa solo lo necesario. Los campos principales quedan listos para móvil.</p>
+      </div>
+      <button class="btn btn-secondary btn-sm" type="button" id="toggleCreateForm">Ocultar</button>
+    </div>
+
+    <div id="createFormWrap">
+      <form method="post" class="form-grid pro-form-grid">
+        {% for field in fields %}
+        <div class="field {% if field.type == 'textarea' %}full{% endif %}">
+          <label for="create_{{ field.name }}">{{ field.label }}</label>
+          {% if field.options %}
+            <select id="create_{{ field.name }}" name="{{ field.name }}">
+              <option value=""></option>
+              {% for option in field.options %}
+              <option value="{{ option }}" {% if option == field.default %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          {% elif field.type == 'textarea' %}
+            <textarea id="create_{{ field.name }}" name="{{ field.name }}" rows="4" placeholder="Ingresa {{ field.label|lower }}">{{ field.default }}</textarea>
+          {% else %}
+            <input id="create_{{ field.name }}" name="{{ field.name }}" type="{{ 'text' if field.type == 'autonumber' else field.type }}" value="{{ field.default }}" {% if field.readonly %}readonly{% endif %}>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <div class="actions full sticky-actions">
+          <button class="btn" type="submit">Guardar registro</button>
+        </div>
+      </form>
+    </div>
+  </aside>
+
+  <section class="module-content-stack">
+    <div class="panel records-toolbar-panel">
+      <div class="records-toolbar">
+        <div>
+          <h3>Registros del módulo</h3>
+          <p class="muted">Busca por equipo, área, responsable, código, aviso SAP o cualquier texto visible.</p>
+        </div>
+        <div class="records-toolbar-actions">
+          <div class="search-box">
+            <span>🔎</span>
+            <input type="search" id="recordsSearch" placeholder="Buscar registro...">
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" id="expandAllRecords">Expandir resultados</button>
+        </div>
+      </div>
+    </div>
+
+    {% for group in grouped_rows %}
+    <section class="panel records-section" data-record-group="{{ group.key }}">
+      <div class="section-head section-head-spread compact-head">
+        <div>
+          <h3>{{ group.title }}</h3>
+          <p class="muted"><span class="records-visible-count">{{ group.rows|length }}</span> registro(s) visibles</p>
+        </div>
+      </div>
+
+      <div class="records-grid-pro" data-records-grid>
+        {% for row in group.rows %}
+        <article class="record-card-pro {{ row.state_badge_class }}" data-search="{{ row.search_blob }}">
+          <div class="record-card-top">
+            <div>
+              <span class="record-kicker">Fila {{ row.row_num }}</span>
+              <h4>{{ row.title }}</h4>
+              {% if row.subtitle %}<p class="record-subtitle">{{ row.subtitle }}</p>{% endif %}
+            </div>
+            {% if row.state_value %}
+            <span class="status-pill {{ row.state_badge_class }}">{{ row.state_value }}</span>
+            {% endif %}
+          </div>
+
+          <div class="record-summary-grid">
+            {% for key, value in row.summary_items %}
+            <div class="record-summary-item">
+              <span>{{ key }}</span>
+              <strong>{{ value }}</strong>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="record-card-actions">
+            <button
+              type="button"
+              class="btn btn-secondary open-editor-btn"
+              data-row-num="{{ row.row_num }}"
+              data-record='{{ row.raw | tojson }}'
+              data-title='{{ row.title | tojson }}'
+              data-status='{{ row.state_value | tojson }}'>
+              Editar
+            </button>
+            {% if row.can_close and close_action %}
+            <form method="post" action="{{ url_for('close_sheet_row', sheet_name=sheet_name, row_num=row.row_num) }}">
+              <button class="btn btn-soft-danger" type="submit">Cerrar</button>
+            </form>
+            {% endif %}
+            <button class="btn btn-link toggle-details-btn" type="button">Ver detalle</button>
+          </div>
+
+          <div class="record-details-panel" hidden>
+            <div class="record-details-grid">
+              {% for key, value in row.detail_items %}
+              <div class="record-item">
+                <span class="record-key">{{ key }}</span>
+                <span class="record-value">{{ value }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </article>
+        {% else %}
+        <div class="record-empty-state">Todavía no hay registros cargados en este bloque.</div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </section>
+</section>
+
+<div class="editor-backdrop" id="editorBackdrop" hidden></div>
+<section class="editor-drawer" id="recordEditor" hidden>
+  <div class="editor-drawer-head">
+    <div>
+      <span class="editor-kicker">Edición de registro</span>
+      <h3 id="editorTitle">Registro</h3>
+      <p class="muted" id="editorSubtitle">Actualiza la información y guarda los cambios en el Excel.</p>
+    </div>
+    <button class="btn btn-secondary btn-sm" type="button" id="closeEditorBtn">Cerrar</button>
+  </div>
+
+  <form method="post" id="editorForm" class="form-grid pro-form-grid">
+    {% for field in edit_fields %}
+    <div class="field {% if field.type == 'textarea' %}full{% endif %}">
+      <label for="edit_{{ field.name }}">{{ field.label }}</label>
+      {% if field.options %}
+        <select id="edit_{{ field.name }}" name="{{ field.name }}" {% if field.readonly_edit %}disabled{% endif %}></select>
+      {% elif field.type == 'textarea' %}
+        <textarea id="edit_{{ field.name }}" name="{{ field.name }}" rows="4" {% if field.readonly_edit %}readonly{% endif %}></textarea>
+      {% else %}
+        <input id="edit_{{ field.name }}" name="{{ field.name }}" type="{{ 'text' if field.type == 'autonumber' else field.type }}" {% if field.readonly_edit %}readonly{% endif %}>
+      {% endif %}
+    </div>
+    {% endfor %}
+    <div class="actions full sticky-actions">
+      <button class="btn" type="submit">Guardar cambios</button>
+    </div>
+  </form>
+</section>
+
+<script>
+(() => {
+  const searchInput = document.getElementById('recordsSearch');
+  const cards = Array.from(document.querySelectorAll('.record-card-pro'));
+  const groups = Array.from(document.querySelectorAll('[data-record-group]'));
+  const toggleCreateFormBtn = document.getElementById('toggleCreateForm');
+  const createFormWrap = document.getElementById('createFormWrap');
+  const expandAllBtn = document.getElementById('expandAllRecords');
+  const editor = document.getElementById('recordEditor');
+  const editorBackdrop = document.getElementById('editorBackdrop');
+  const editorForm = document.getElementById('editorForm');
+  const editorTitle = document.getElementById('editorTitle');
+  const editorSubtitle = document.getElementById('editorSubtitle');
+  const closeEditorBtn = document.getElementById('closeEditorBtn');
+
+  function filterCards() {
+    const query = (searchInput.value || '').trim().toLowerCase();
+    groups.forEach(group => {
+      const groupCards = Array.from(group.querySelectorAll('.record-card-pro'));
+      let visible = 0;
+      groupCards.forEach(card => {
+        const haystack = card.dataset.search || '';
+        const match = !query || haystack.includes(query);
+        card.hidden = !match;
+        if (match) visible += 1;
+      });
+      const countEl = group.querySelector('.records-visible-count');
+      if (countEl) countEl.textContent = visible;
+      group.hidden = visible === 0;
+    });
+  }
+
+  searchInput?.addEventListener('input', filterCards);
+
+  toggleCreateFormBtn?.addEventListener('click', () => {
+    const currentlyHidden = createFormWrap.hidden;
+    createFormWrap.hidden = !currentlyHidden;
+    toggleCreateFormBtn.textContent = currentlyHidden ? 'Ocultar' : 'Mostrar';
+  });
+
+  document.querySelectorAll('.toggle-details-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.record-card-pro');
+      const details = card.querySelector('.record-details-panel');
+      const willShow = details.hidden;
+      details.hidden = !willShow;
+      btn.textContent = willShow ? 'Ocultar detalle' : 'Ver detalle';
+    });
+  });
+
+  expandAllBtn?.addEventListener('click', () => {
+    const buttons = Array.from(document.querySelectorAll('.toggle-details-btn'));
+    const hasClosed = buttons.some(btn => btn.textContent.includes('Ver'));
+    buttons.forEach(btn => {
+      const card = btn.closest('.record-card-pro');
+      const details = card.querySelector('.record-details-panel');
+      details.hidden = !hasClosed;
+      btn.textContent = hasClosed ? 'Ocultar detalle' : 'Ver detalle';
+    });
+    expandAllBtn.textContent = hasClosed ? 'Contraer resultados' : 'Expandir resultados';
+  });
+
+  function openEditor(button) {
+    const record = JSON.parse(button.dataset.record || '{}');
+    const rowNum = button.dataset.rowNum;
+    const title = JSON.parse(button.dataset.title || '"Registro"');
+    const status = JSON.parse(button.dataset.status || '""');
+
+    editorTitle.textContent = title || `Registro ${rowNum}`;
+    editorSubtitle.textContent = status ? `Estado actual: ${status}` : `Fila ${rowNum} del Excel`;
+    editorForm.action = "{{ url_for('edit_sheet_row', sheet_name=sheet_name, row_num=0) }}".replace('/0', '/' + rowNum);
+
+    {% for field in edit_fields %}
+      {
+        const el = document.getElementById('edit_{{ field.name }}');
+        if (el) {
+          const value = record['{{ field.name }}'] ?? '';
+          if (el.tagName === 'SELECT') {
+            const existingValues = Array.from(el.options).map(option => option.value);
+            el.innerHTML = '';
+            {% if field.options %}
+            const baseOptions = {{ field.options | tojson }};
+            [''].concat(baseOptions).forEach(optionValue => {
+              const option = document.createElement('option');
+              option.value = optionValue;
+              option.textContent = optionValue;
+              if (optionValue === value) option.selected = true;
+              el.appendChild(option);
+            });
+            {% else %}
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            option.selected = true;
+            el.appendChild(option);
+            {% endif %}
+            if (value && !Array.from(el.options).some(option => option.value === value)) {
+              const option = document.createElement('option');
+              option.value = value;
+              option.textContent = value;
+              option.selected = true;
+              el.appendChild(option);
+            }
+            el.value = value;
+          } else {
+            el.value = value;
+          }
+        }
+      }
+    {% endfor %}
+
+    editor.hidden = false;
+    editorBackdrop.hidden = false;
+    document.body.classList.add('drawer-open');
+  }
+
+  function closeEditor() {
+    editor.hidden = true;
+    editorBackdrop.hidden = true;
+    document.body.classList.remove('drawer-open');
+  }
+
+  document.querySelectorAll('.open-editor-btn').forEach(button => {
+    button.addEventListener('click', () => openEditor(button));
+  });
+
+  closeEditorBtn?.addEventListener('click', closeEditor);
+  editorBackdrop?.addEventListener('click', closeEditor);
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !editor.hidden) closeEditor();
+  });
+
+  filterCards();
+})();
+</script>
 {% endblock %}

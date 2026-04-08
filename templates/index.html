@@ -1,27 +1,73 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="hero hero-mobile">
-  <div>
-    <h2>Acceso rápido</h2>
-    <p>Abre un módulo, completa el formulario y guarda el registro desde el celular.</p>
+<section class="hero pro-hero">
+  <div class="hero-copy">
+    <span class="hero-kicker">Centro de control</span>
+    <h2>Operación del turno, registros y seguimiento en una sola vista</h2>
+    <p>Ingresa a cada módulo, registra información, busca antecedentes, edita registros existentes y realiza cierres rápidos cuando corresponda.</p>
+    <div class="hero-badges">
+      <span class="badge">📱 Responsive</span>
+      <span class="badge">🔎 Búsqueda rápida</span>
+      <span class="badge">✏️ Edición de registros</span>
+      <span class="badge">✅ Cierre operativo</span>
+    </div>
   </div>
-  <div class="hero-badges">
-    <span class="badge">📱 Responsive</span>
-    <span class="badge">🗂️ Excel</span>
-    <span class="badge">⚡ Rápido</span>
+  <div class="hero-stats-grid">
+    <article class="hero-stat danger">
+      <span>Bloqueos activos</span>
+      <strong>{{ kpis.bloqueos }}</strong>
+      <small>Equipos con restricción</small>
+    </article>
+    <article class="hero-stat warn">
+      <span>Anomalías abiertas</span>
+      <strong>{{ kpis.anomalias }}</strong>
+      <small>Seguimiento pendiente</small>
+    </article>
+    <article class="hero-stat brand">
+      <span>Avisos SAP abiertos</span>
+      <strong>{{ kpis.avisos }}</strong>
+      <small>Control de mantenimiento</small>
+    </article>
+    <article class="hero-stat neutral">
+      <span>Bitácora reciente</span>
+      <strong>{{ kpis.bitacora }}</strong>
+      <small>Eventos con registro</small>
+    </article>
   </div>
 </section>
 
-<section class="grid mobile-grid">
-  {% for module in modules %}
-  <a class="card module-card" href="{{ module.href }}">
-    <div class="module-head">
-      <div class="module-icon">{{ module.icon }}</div>
-      <div class="module-count">{{ module.count }}</div>
+<section class="panel section-panel">
+  <div class="section-head section-head-spread">
+    <div>
+      <h3>Módulos del sistema</h3>
+      <p class="muted">Agrupados por tipo de gestión para entrar más rápido a cada flujo.</p>
     </div>
-    <h3>{{ module.title }}</h3>
-    <span class="card-link">Abrir módulo</span>
-  </a>
-  {% endfor %}
+  </div>
+
+  <div class="module-sections">
+    {% for section in sections %}
+      <section class="module-group-block">
+        <div class="group-title-row">
+          <h4>{{ section.title }}</h4>
+          <span class="group-helper">{{ section.items|length }} módulos</span>
+        </div>
+        <div class="grid module-grid-pro">
+          {% for module in section.items %}
+            <a class="card module-card-pro {{ module.accent }}" href="{{ module.href }}">
+              <div class="module-card-head">
+                <div class="module-icon-box">{{ module.icon }}</div>
+                <span class="module-count-pill">{{ module.count }}</span>
+              </div>
+              <div class="module-card-body">
+                <h5>{{ module.title }}</h5>
+                <p>Abrir módulo, registrar, revisar historial y editar información operativa.</p>
+              </div>
+              <span class="card-link">Entrar al módulo</span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  </div>
 </section>
 {% endblock %}

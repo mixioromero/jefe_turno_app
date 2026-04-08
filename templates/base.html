@@ -6,24 +6,33 @@
   <meta name="theme-color" content="#0b2239">
   <title>{{ title if title else 'Panel Jefe de Turno' }}</title>
   <link rel="manifest" href="{{ url_for('manifest') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=3">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=6">
 </head>
 <body>
   <header class="topbar">
-    <div class="title-wrap">
-      <div class="eyebrow">Puerto · Gestión operativa</div>
-      <h1>Panel Jefe de Turno</h1>
-      <p>Registro móvil sobre tu Excel actual</p>
+    <div class="topbar-inner">
+      <div class="title-wrap">
+        <div class="eyebrow">Puerto · Gestión operativa</div>
+        <h1>Panel Jefe de Turno</h1>
+        <p>Registro, seguimiento y cierre operativo desde una vista móvil y de escritorio.</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn ghost" href="{{ url_for('index') }}">Inicio</a>
+      </div>
     </div>
-    <a class="btn ghost" href="{{ url_for('index') }}">Inicio</a>
   </header>
 
-  <main class="container">
+  <main class="container page-shell">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash {{ category }}">{{ message }}</div>
-        {% endfor %}
+        <section class="flash-stack">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">
+              <strong>{{ 'Correcto' if category == 'success' else 'Atención' }}</strong>
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </section>
       {% endif %}
     {% endwith %}
 
@@ -32,13 +41,7 @@
 
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async () => {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for (const reg of regs) {
-          await reg.unregister();
-        }
-        navigator.serviceWorker.register('/service-worker.js');
-      });
+      window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js'));
     }
   </script>
 </body>
