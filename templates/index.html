@@ -12,26 +12,22 @@
       <span class="badge">✅ Cierre operativo</span>
     </div>
   </div>
-
   <div class="hero-stats-grid">
     <article class="hero-stat danger">
       <span>Bloqueos activos</span>
       <strong>{{ kpis.bloqueos }}</strong>
       <small>Equipos con restricción</small>
     </article>
-
     <article class="hero-stat warn">
       <span>Anomalías abiertas</span>
       <strong>{{ kpis.anomalias }}</strong>
       <small>Seguimiento pendiente</small>
     </article>
-
     <article class="hero-stat brand">
       <span>Avisos SAP abiertos</span>
       <strong>{{ kpis.avisos }}</strong>
       <small>Control de mantenimiento</small>
     </article>
-
     <article class="hero-stat neutral">
       <span>Bitácora reciente</span>
       <strong>{{ kpis.bitacora }}</strong>
@@ -55,7 +51,6 @@
           <h4>{{ section['title'] }}</h4>
           <span class="group-helper">{{ section['items']|length }} módulos</span>
         </div>
-
         <div class="grid module-grid-pro">
           {% for module in section['items'] %}
             <a class="card module-card-pro {{ module.accent }}" href="{{ module.href }}">
@@ -63,12 +58,10 @@
                 <div class="module-icon-box">{{ module.icon }}</div>
                 <span class="module-count-pill">{{ module.count }}</span>
               </div>
-
               <div class="module-card-body">
                 <h5>{{ module.title }}</h5>
                 <p>Abrir módulo, registrar, revisar historial y editar información operativa.</p>
               </div>
-
               <span class="card-link">Entrar al módulo</span>
             </a>
           {% endfor %}
