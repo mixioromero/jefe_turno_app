@@ -297,10 +297,13 @@
   }
 
   function closeEditor() {
-    editor.hidden = true;
-    editorBackdrop.hidden = true;
-    document.body.classList.remove('drawer-open');
-  }
+  editor.hidden = true;
+  editorBackdrop.hidden = true;
+  document.body.classList.remove('drawer-open');
+  editorForm.action = '';
+  editorTitle.textContent = 'Registro';
+  editorSubtitle.textContent = 'Actualiza la información y guarda los cambios en el Excel.';
+}
 
   document.querySelectorAll('.open-editor-btn').forEach(button => {
     button.addEventListener('click', () => openEditor(button));
