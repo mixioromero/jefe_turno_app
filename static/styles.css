@@ -644,6 +644,11 @@ select:focus {
   border: 1px dashed rgba(148, 163, 184, 0.35);
 }
 
+.editor-backdrop[hidden],
+.editor-drawer[hidden] {
+  display: none !important;
+}
+
 .editor-backdrop {
   position: fixed;
   inset: 0;
