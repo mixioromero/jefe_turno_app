@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="module-top bloqueos-hero">
+<section class="module-top bloqueos-hero bloqueos-shell">
   <a class="back-link" href="{{ url_for('index') }}">← Volver</a>
   <div class="bloqueos-hero-head">
     <div>
       <h2>{{ icon }} {{ title }}</h2>
-      <p class="muted">Control visual rápido para revisar si un equipo está bloqueado y actualizar el motivo operativo.</p>
+      <p class="muted">Selecciona un bloqueo desde la lista y abajo podrás modificar su estado y motivo operativo.</p>
     </div>
   </div>
 
@@ -13,61 +13,106 @@
   {% set libres = rows|length - bloqueados %}
   <div class="bloqueos-summary">
     <article class="summary-card danger">
-      <span class="summary-label">Equipos bloqueados</span>
+      <span class="summary-label">Bloqueados</span>
       <strong>{{ bloqueados }}</strong>
-      <small>Requieren seguimiento</small>
+      <small>Con restricción activa</small>
     </article>
     <article class="summary-card success">
-      <span class="summary-label">Equipos liberados</span>
+      <span class="summary-label">No bloqueados</span>
       <strong>{{ libres }}</strong>
-      <small>Disponibles para operación</small>
+      <small>Disponibles</small>
     </article>
     <article class="summary-card neutral">
-      <span class="summary-label">Total registrados</span>
-      <strong>{{ rows|length }}</strong>
-      <small>Controlados en este módulo</small>
+      <span class="summary-label">Personal</span>
+      <strong>Eléctrico</strong>
+      <small>Aplicado en este módulo</small>
     </article>
   </div>
 </section>
 
-<section class="records-list bloqueos-grid">
-  {% for row in rows %}
-  <article class="record-card bloqueo-card {{ row.estado_badge }}">
-    <div class="bloqueo-accent"></div>
-    <div class="bloqueo-head">
-      <div class="bloqueo-title-wrap">
-        <div class="bloqueo-kicker">{{ row.area }}</div>
-        <h3>{{ row.equipo }}</h3>
-        <div class="bloqueo-meta">
-          {% if row.tipo_bloqueo %}
-          <span class="meta-chip">{{ row.tipo_bloqueo }}</span>
-          {% endif %}
-          {% if row.responsable %}
-          <span class="meta-chip soft">Resp. {{ row.responsable }}</span>
-          {% endif %}
-        </div>
+<section class="bloqueos-shell bloqueos-master-detail">
+  <div class="bloqueos-master panel">
+    <div class="section-head compact-head">
+      <div>
+        <h3>Lista de bloqueos</h3>
+        <p class="muted">Toca un equipo para abrir su edición inferior.</p>
       </div>
-      <span class="status-pill {{ row.estado_badge }}">{{ row.estado_ui }}</span>
     </div>
 
-    <form method="post" class="bloqueo-form">
-      <input type="hidden" name="row_num" value="{{ row.row_num }}">
+    {% for group_name in ['Embarque', 'Desembarque'] %}
+      {% set group_rows = groups[group_name] %}
+      <div class="bloqueo-group">
+        <div class="group-head">
+          <h4>{{ group_name }}</h4>
+          <span class="group-count">{{ group_rows|length }}</span>
+        </div>
 
-      <div class="bloqueo-layout">
-        <div class="field estado-field">
-          <label for="estado_{{ row.row_num }}">Estado actual</label>
-          <div class="select-shell {{ row.estado_badge }}">
-            <select id="estado_{{ row.row_num }}" name="estado_ui">
-              <option value="Bloqueado" {% if row.estado_ui == 'Bloqueado' %}selected{% endif %}>Bloqueado</option>
-              <option value="No bloqueado" {% if row.estado_ui == 'No bloqueado' %}selected{% endif %}>No bloqueado</option>
+        <div class="bloqueo-list">
+          {% for row in group_rows %}
+            <button
+              type="button"
+              class="bloqueo-list-item {{ row.estado_badge }} {% if row.row_num == selected_row %}is-selected{% endif %}"
+              data-row-num="{{ row.row_num }}"
+              data-equipo="{{ row.equipo }}"
+              data-area="{{ row.area }}"
+              data-personal="Eléctrico"
+              data-responsable="{{ row.responsable }}"
+              data-estado-ui="{{ row.estado_ui }}"
+              data-motivo="{{ row.motivo }}"
+              data-badge="{{ row.estado_badge }}">
+              <div class="list-main">
+                <strong>{{ row.equipo }}</strong>
+                <span>{{ row.area }}</span>
+              </div>
+              <span class="status-pill {{ row.estado_badge }}">{{ row.estado_ui }}</span>
+            </button>
+          {% else %}
+            <div class="list-empty">Sin equipos en {{ group_name|lower }}.</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="bloqueos-detail panel">
+    <div class="section-head compact-head">
+      <div>
+        <h3>Edición del bloqueo</h3>
+        <p class="muted">La selección se refleja aquí y luego puedes guardar el cambio.</p>
+      </div>
+    </div>
+
+    <form method="post" class="bloqueo-detail-form" id="bloqueoDetailForm">
+      <input type="hidden" name="row_num" id="detailRowNum" value="{{ selected_row or '' }}">
+
+      <div class="detail-top-card">
+        <div>
+          <div class="detail-kicker" id="detailArea">Selecciona un bloqueo</div>
+          <h3 id="detailEquipo">Equipo</h3>
+          <div class="detail-meta">
+            <span class="meta-chip" id="detailPersonal">Personal: Eléctrico</span>
+            <span class="meta-chip soft" id="detailResponsable">Responsable</span>
+          </div>
+        </div>
+        <span class="status-pill" id="detailStatusBadge">Estado</span>
+      </div>
+
+      <div class="detail-form-grid">
+        <div class="field">
+          <label for="detailEstado">Estado del bloqueo</label>
+          <div class="select-shell" id="detailSelectShell">
+            <select id="detailEstado" name="estado_ui">
+              <option value="Bloqueado">Bloqueado</option>
+              <option value="No bloqueado">No bloqueado</option>
             </select>
           </div>
         </div>
 
-        <div class="field full motivo-field">
-          <label for="motivo_{{ row.row_num }}">Motivo / contexto</label>
-          <textarea id="motivo_{{ row.row_num }}" name="motivo" rows="4" placeholder="Ej.: mantenimiento correctivo, inspección, falla eléctrica, limpieza, espera de repuesto...">{{ row.motivo }}</textarea>
-          <p class="field-help">Deja un motivo breve y claro para que el siguiente turno entienda la condición del equipo.</p>
+        <div class="field full">
+          <label for="detailMotivo">Motivo del bloqueo</label>
+          <textarea id="detailMotivo" name="motivo" rows="5" placeholder="Ej.: mantenimiento eléctrico, revisión de motor, aislamiento, inspección...
+"></textarea>
+          <p class="field-help">Se guarda el estado y el motivo; el personal queda como <strong>Eléctrico</strong>.</p>
         </div>
       </div>
 
@@ -75,9 +120,62 @@
         <button class="btn" type="submit">Guardar actualización</button>
       </div>
     </form>
-  </article>
-  {% else %}
-  <p class="muted">No hay equipos cargados en Bloqueos Activos.</p>
-  {% endfor %}
+  </div>
 </section>
+
+<script>
+  (() => {
+    const items = Array.from(document.querySelectorAll('.bloqueo-list-item'));
+    const rowNum = document.getElementById('detailRowNum');
+    const area = document.getElementById('detailArea');
+    const equipo = document.getElementById('detailEquipo');
+    const personal = document.getElementById('detailPersonal');
+    const responsable = document.getElementById('detailResponsable');
+    const estado = document.getElementById('detailEstado');
+    const motivo = document.getElementById('detailMotivo');
+    const badge = document.getElementById('detailStatusBadge');
+    const shell = document.getElementById('detailSelectShell');
+
+    function applyState(item) {
+      items.forEach(btn => btn.classList.remove('is-selected'));
+      item.classList.add('is-selected');
+
+      rowNum.value = item.dataset.rowNum || '';
+      area.textContent = item.dataset.area || 'Sin área';
+      equipo.textContent = item.dataset.equipo || 'Equipo';
+      personal.textContent = `Personal: ${item.dataset.personal || 'Eléctrico'}`;
+      responsable.textContent = item.dataset.responsable ? `Responsable: ${item.dataset.responsable}` : 'Responsable: Sin asignar';
+      estado.value = item.dataset.estadoUi || 'No bloqueado';
+      motivo.value = item.dataset.motivo || '';
+      badge.textContent = item.dataset.estadoUi || 'Estado';
+      badge.className = `status-pill ${item.dataset.badge || ''}`;
+      shell.className = `select-shell ${item.dataset.badge || ''}`;
+      document.getElementById('bloqueoDetailForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    estado.addEventListener('change', () => {
+      const badgeClass = estado.value === 'Bloqueado' ? 'is-blocked' : 'is-clear';
+      badge.textContent = estado.value;
+      badge.className = `status-pill ${badgeClass}`;
+      shell.className = `select-shell ${badgeClass}`;
+      const active = document.querySelector('.bloqueo-list-item.is-selected');
+      if (active) {
+        active.dataset.estadoUi = estado.value;
+        active.dataset.badge = badgeClass;
+        const pill = active.querySelector('.status-pill');
+        pill.textContent = estado.value;
+        pill.className = `status-pill ${badgeClass}`;
+        active.classList.remove('is-blocked', 'is-clear');
+        active.classList.add(badgeClass);
+      }
+    });
+
+    items.forEach(item => item.addEventListener('click', () => applyState(item)));
+
+    const initial = document.querySelector('.bloqueo-list-item.is-selected') || items[0];
+    if (initial) {
+      applyState(initial);
+    }
+  })();
+</script>
 {% endblock %}
