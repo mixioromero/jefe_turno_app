@@ -1,38 +1,536 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="module-top bloqueos-hero bloqueos-shell">
-  <a class="back-link" href="{{ url_for('index') }}">← Volver</a>
-  <div class="bloqueos-hero-head">
-    <div>
-      <h2>{{ icon }} {{ title }}</h2>
-      <p class="muted">Toca un equipo para desplegar su edición debajo de la tarjeta y actualizar estado o motivo de forma rápida.</p>
+<section class="bloqueos-page">
+  <style>
+    .bloqueos-page {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .bloqueos-page .bloqueos-hero,
+    .bloqueos-page .bloqueos-panel,
+    .bloqueos-page .bloqueo-inline-editor {
+      background: #fff;
+      border: 1px solid rgba(217, 226, 236, 0.95);
+      border-radius: 24px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.09);
+    }
+
+    .bloqueos-page .bloqueos-hero,
+    .bloqueos-page .bloqueos-panel {
+      padding: 18px;
+    }
+
+    .bloqueos-page .back-link {
+      text-decoration: none;
+      color: #0d6efd;
+      font-weight: 700;
+    }
+
+    .bloqueos-page .bloqueos-hero-head h2 {
+      margin: 10px 0 6px;
+      font-size: 30px;
+      line-height: 1.12;
+      color: #17212b;
+    }
+
+    .bloqueos-page .muted {
+      color: #66788a;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .bloqueos-page .bloqueos-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .bloqueos-page .summary-card {
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid #d9e2ec;
+      display: grid;
+      gap: 8px;
+      background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+    }
+
+    .bloqueos-page .summary-card.danger {
+      background: linear-gradient(180deg, #fff, #fff5f5);
+      border-color: rgba(220, 38, 38, 0.16);
+    }
+
+    .bloqueos-page .summary-card.success {
+      background: linear-gradient(180deg, #fff, #f4fff8);
+      border-color: rgba(22, 163, 74, 0.16);
+    }
+
+    .bloqueos-page .summary-card.neutral {
+      background: linear-gradient(180deg, #fff, #eff6ff);
+      border-color: rgba(13, 110, 253, 0.15);
+    }
+
+    .bloqueos-page .summary-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #66788a;
+      font-weight: 700;
+    }
+
+    .bloqueos-page .summary-card strong {
+      font-size: 28px;
+      line-height: 1;
+      color: #17212b;
+    }
+
+    .bloqueos-page .summary-card small {
+      color: #66788a;
+    }
+
+    .bloqueos-page .bloqueos-panel {
+      padding: 18px;
+    }
+
+    .bloqueos-page .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .bloqueos-page .section-head h3 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      color: #17212b;
+    }
+
+    .bloqueos-page .bloqueo-group + .bloqueo-group {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid #e6edf5;
+    }
+
+    .bloqueos-page .group-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .bloqueos-page .group-head h4 {
+      margin: 0;
+      font-size: 16px;
+      color: #17212b;
+    }
+
+    .bloqueos-page .group-count {
+      min-width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: #eef5fb;
+      color: #29465f;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .bloqueos-page .bloqueo-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bloqueos-page .bloqueo-card-shell {
+      display: grid;
+      gap: 0;
+    }
+
+    .bloqueos-page .accordion-trigger {
+      width: 100%;
+      text-align: left;
+      border: 1px solid #d9e4ef;
+      border-radius: 18px;
+      background: #fff;
+      padding: 16px 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .bloqueos-page .accordion-trigger:hover {
+      transform: translateY(-1px);
+      border-color: #bfd3e4;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    .bloqueos-page .accordion-trigger.is-selected,
+    .bloqueos-page .bloqueo-card-shell.current-shell > .accordion-trigger {
+      border-color: #8ab2d3;
+      box-shadow: 0 12px 28px rgba(29, 78, 216, 0.08);
+    }
+
+    .bloqueos-page .accordion-trigger.is-blocked {
+      background: linear-gradient(180deg, #fff, #fff5f5);
+    }
+
+    .bloqueos-page .accordion-trigger.is-clear {
+      background: linear-gradient(180deg, #fff, #f5fff8);
+    }
+
+    .bloqueos-page .list-main {
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .bloqueos-page .list-topline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 10px;
+    }
+
+    .bloqueos-page .list-topline strong {
+      font-size: 16px;
+      color: #17212b;
+    }
+
+    .bloqueos-page .list-area {
+      font-size: 12px;
+      color: #567;
+      background: #eef5fb;
+      border: 1px solid #d7e4f0;
+      border-radius: 999px;
+      padding: 4px 10px;
+    }
+
+    .bloqueos-page .list-motive-wrap {
+      display: grid;
+      gap: 5px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(13, 110, 253, 0.05);
+      border: 1px solid rgba(13, 110, 253, 0.10);
+    }
+
+    .bloqueos-page .mini-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #698096;
+      font-weight: 700;
+    }
+
+    .bloqueos-page .list-comment {
+      display: block;
+      color: #22313f;
+      line-height: 1.45;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .bloqueos-page .list-side {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .bloqueos-page .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 118px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+    }
+
+    .bloqueos-page .status-pill.is-blocked {
+      background: #fff1f2;
+      color: #b91c1c;
+    }
+
+    .bloqueos-page .status-pill.is-clear {
+      background: #ecfdf3;
+      color: #166534;
+    }
+
+    .bloqueos-page .expand-indicator {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: #eef5fb;
+      color: #355;
+      font-size: 16px;
+      transition: transform .2s ease, background .2s ease;
+    }
+
+    .bloqueos-page .accordion-trigger.is-selected .expand-indicator {
+      transform: rotate(180deg);
+      background: #dceafb;
+    }
+
+    .bloqueos-page .bloqueo-inline-editor {
+      margin: 0 14px 14px;
+      padding: 16px;
+      border: 1px solid #dfe8f1;
+      border-radius: 16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 10px 24px rgba(15, 23, 42, 0.06);
+      background: #fff;
+    }
+
+    .bloqueos-page .bloqueo-inline-editor[hidden] {
+      display: none !important;
+    }
+
+    .bloqueos-page .editor-blocked {
+      border-left: 4px solid #b91c1c;
+    }
+
+    .bloqueos-page .editor-clear {
+      border-left: 4px solid #166534;
+    }
+
+    .bloqueos-page .editor-animate {
+      animation: bloqueosSlideFade .22s ease;
+    }
+
+    @keyframes bloqueosSlideFade {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bloqueos-page .inline-editor-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .bloqueos-page .detail-kicker {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #66788a;
+      margin-bottom: 8px;
+    }
+
+    .bloqueos-page .inline-editor-head h3 {
+      margin: 0 0 10px;
+      font-size: 26px;
+      color: #17212b;
+    }
+
+    .bloqueos-page .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .bloqueos-page .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: #eef4fa;
+      color: #284256;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .bloqueos-page .meta-chip.soft {
+      background: #f4f7fb;
+      color: #526679;
+    }
+
+    .bloqueos-page .detail-comment {
+      margin: 10px 0 0;
+      color: #365067;
+      line-height: 1.45;
+    }
+
+    .bloqueos-page .detail-form-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .bloqueos-page .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .bloqueos-page label {
+      font-weight: 700;
+      color: #22313f;
+    }
+
+    .bloqueos-page .hidden-select {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 1px;
+      height: 1px;
+    }
+
+    .bloqueos-page .state-toggle {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+
+    .bloqueos-page .state-btn {
+      border: 1px solid #cfdae6;
+      background: #f7fafc;
+      color: #203040;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .18s ease;
+    }
+
+    .bloqueos-page .state-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .bloqueos-page .state-btn.is-active[data-value="Bloqueado"] {
+      background: rgba(220, 38, 38, 0.12);
+      border-color: rgba(220, 38, 38, 0.28);
+      color: #991b1b;
+    }
+
+    .bloqueos-page .state-btn.is-active[data-value="No bloqueado"] {
+      background: rgba(22, 163, 74, 0.12);
+      border-color: rgba(22, 163, 74, 0.28);
+      color: #166534;
+    }
+
+    .bloqueos-page textarea {
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      border-radius: 14px;
+      border: 1px solid #d6e1eb;
+      padding: 12px 14px;
+      background: #fcfdff;
+      color: #17212b;
+    }
+
+    .bloqueos-page .field-help {
+      margin: 0;
+      color: #66788a;
+      font-size: 13px;
+    }
+
+    .bloqueos-page .inline-actions {
+      margin-top: 14px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .bloqueos-page .btn {
+      border: none;
+      background: #0d6efd;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .bloqueos-page .btn:hover {
+      filter: brightness(0.96);
+    }
+
+    .bloqueos-page .list-empty {
+      padding: 16px;
+      border-radius: 14px;
+      background: #f8fbff;
+      color: #66788a;
+      border: 1px dashed rgba(148, 163, 184, 0.35);
+    }
+
+    @media (max-width: 760px) {
+      .bloqueos-page .bloqueos-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .bloqueos-page .accordion-trigger {
+        grid-template-columns: 1fr;
+      }
+
+      .bloqueos-page .list-side {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .bloqueos-page .inline-editor-head {
+        flex-direction: column;
+      }
+
+      .bloqueos-page .state-toggle {
+        grid-template-columns: 1fr;
+      }
+
+      .bloqueos-page .bloqueo-inline-editor {
+        margin: 0 10px 10px;
+        padding: 14px;
+      }
+    }
+  </style>
+
+  <section class="bloqueos-hero">
+    <a class="back-link" href="{{ url_for('index') }}">← Volver</a>
+    <div class="bloqueos-hero-head">
+      <div>
+        <h2>{{ icon }} {{ title }}</h2>
+        <p class="muted">Toca un equipo para desplegar su edición debajo de la tarjeta y actualizar estado o motivo de forma rápida.</p>
+      </div>
     </div>
-  </div>
 
-  {% set bloqueados = rows|selectattr('estado_ui', 'equalto', 'Bloqueado')|list|length %}
-  {% set libres = rows|length - bloqueados %}
-  <div class="bloqueos-summary">
-    <article class="summary-card danger">
-      <span class="summary-label">Bloqueados</span>
-      <strong>{{ bloqueados }}</strong>
-      <small>Con restricción activa</small>
-    </article>
-    <article class="summary-card success">
-      <span class="summary-label">No bloqueados</span>
-      <strong>{{ libres }}</strong>
-      <small>Disponibles para operar</small>
-    </article>
-    <article class="summary-card neutral">
-      <span class="summary-label">Personal</span>
-      <strong>Eléctrico</strong>
-      <small>Asignado al módulo</small>
-    </article>
-  </div>
-</section>
+    {% set bloqueados = rows|selectattr('estado_ui', 'equalto', 'Bloqueado')|list|length %}
+    {% set libres = rows|length - bloqueados %}
+    <div class="bloqueos-summary">
+      <article class="summary-card danger">
+        <span class="summary-label">Bloqueados</span>
+        <strong>{{ bloqueados }}</strong>
+        <small>Con restricción activa</small>
+      </article>
+      <article class="summary-card success">
+        <span class="summary-label">No bloqueados</span>
+        <strong>{{ libres }}</strong>
+        <small>Disponibles para operar</small>
+      </article>
+      <article class="summary-card neutral">
+        <span class="summary-label">Personal</span>
+        <strong>Eléctrico</strong>
+        <small>Asignado al módulo</small>
+      </article>
+    </div>
+  </section>
 
-<section class="bloqueos-shell bloqueos-accordion-layout">
-  <div class="panel bloqueos-accordion-panel">
-    <div class="section-head compact-head">
+  <section class="bloqueos-panel">
+    <div class="section-head">
       <div>
         <h3>Bloqueos por área</h3>
         <p class="muted">Selecciona el equipo que quieras actualizar. El editor se abrirá justo debajo de su tarjeta.</p>
@@ -49,11 +547,11 @@
 
         <div class="bloqueo-stack">
           {% for row in group_rows %}
-            <article class="bloqueo-card-shell {% if row.row_num == selected_row %}current-shell{% endif %}" data-shell-row="{{ row.row_num }}">
+            <article class="bloqueo-card-shell" data-shell-row="{{ row.row_num }}">
               <button
                 type="button"
-                class="bloqueo-list-item accordion-trigger {{ row.estado_badge }} {% if row.row_num == selected_row %}is-selected{% endif %}"
-                aria-expanded="{{ 'true' if row.row_num == selected_row else 'false' }}"
+                class="accordion-trigger {{ row.estado_badge }}"
+                aria-expanded="false"
                 data-row-num="{{ row.row_num }}"
                 data-equipo="{{ row.equipo }}"
                 data-area="{{ row.area }}"
@@ -70,7 +568,7 @@
                   </div>
                   <div class="list-motive-wrap">
                     <span class="mini-label">Motivo</span>
-                    <small class="list-comment">{{ row.comentario }}</small>
+                    <small class="list-comment">{{ row.comentario if row.comentario else 'Sin motivo registrado' }}</small>
                   </div>
                 </div>
                 <div class="list-side">
@@ -85,54 +583,54 @@
         </div>
       </div>
     {% endfor %}
-  </div>
+  </section>
+
+  <form method="post" class="bloqueo-inline-editor" id="bloqueoInlineEditor" hidden>
+    <input type="hidden" name="row_num" id="detailRowNum" value="">
+
+    <div class="inline-editor-head">
+      <div>
+        <div class="detail-kicker" id="detailArea">Selecciona un bloqueo</div>
+        <h3 id="detailEquipo">Equipo</h3>
+        <div class="detail-meta">
+          <span class="meta-chip" id="detailPersonal">Personal: Eléctrico</span>
+          <span class="meta-chip soft" id="detailResponsable">Responsable: Sin asignar</span>
+        </div>
+      </div>
+      <span class="status-pill" id="detailStatusBadge">Estado</span>
+    </div>
+
+    <p class="detail-comment" id="detailComentario">Sin comentario registrado</p>
+
+    <div class="detail-form-grid">
+      <div class="field">
+        <label for="detailEstado">Estado del bloqueo</label>
+        <div class="state-toggle">
+          <button type="button" class="state-btn is-active" data-value="Bloqueado">Bloqueado</button>
+          <button type="button" class="state-btn" data-value="No bloqueado">No bloqueado</button>
+        </div>
+        <select id="detailEstado" name="estado_ui" class="hidden-select" tabindex="-1" aria-hidden="true">
+          <option value="Bloqueado">Bloqueado</option>
+          <option value="No bloqueado">No bloqueado</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="detailMotivo">Motivo del bloqueo</label>
+        <textarea id="detailMotivo" name="motivo" rows="4" placeholder="Ej.: mantenimiento eléctrico, revisión de motor, aislamiento, inspección..."></textarea>
+        <p class="field-help">El cambio se guarda directamente en el registro seleccionado.</p>
+      </div>
+    </div>
+
+    <div class="inline-actions">
+      <button class="btn" type="submit">Guardar actualización</button>
+    </div>
+  </form>
 </section>
-
-<form method="post" class="bloqueo-inline-editor panel" id="bloqueoInlineEditor" hidden>
-  <input type="hidden" name="row_num" id="detailRowNum" value="{{ selected_row or '' }}">
-
-  <div class="inline-editor-head">
-    <div>
-      <div class="detail-kicker" id="detailArea">Selecciona un bloqueo</div>
-      <h3 id="detailEquipo">Equipo</h3>
-      <div class="detail-meta">
-        <span class="meta-chip" id="detailPersonal">Personal: Eléctrico</span>
-        <span class="meta-chip soft" id="detailResponsable">Responsable</span>
-      </div>
-    </div>
-    <span class="status-pill" id="detailStatusBadge">Estado</span>
-  </div>
-
-  <p class="detail-comment" id="detailComentario">Sin comentario registrado</p>
-
-  <div class="detail-form-grid inline-grid">
-    <div class="field compact-field">
-      <label for="detailEstado">Estado del bloqueo</label>
-      <div class="state-toggle" id="stateToggle">
-        <button type="button" class="state-btn is-active" data-value="Bloqueado">Bloqueado</button>
-        <button type="button" class="state-btn" data-value="No bloqueado">No bloqueado</button>
-      </div>
-      <select id="detailEstado" name="estado_ui" class="hidden-select" tabindex="-1" aria-hidden="true">
-        <option value="Bloqueado">Bloqueado</option>
-        <option value="No bloqueado">No bloqueado</option>
-      </select>
-    </div>
-
-    <div class="field full compact-field">
-      <label for="detailMotivo">Motivo del bloqueo</label>
-      <textarea id="detailMotivo" name="motivo" rows="4" placeholder="Ej.: mantenimiento eléctrico, revisión de motor, aislamiento, inspección..."></textarea>
-      <p class="field-help">El cambio se guarda directamente en el registro seleccionado.</p>
-    </div>
-  </div>
-
-  <div class="actions sticky-actions bloqueo-actions inline-actions">
-    <button class="btn" type="submit">Guardar actualización</button>
-  </div>
-</form>
 
 <script>
   (() => {
-    const items = Array.from(document.querySelectorAll('.bloqueo-list-item'));
+    const items = Array.from(document.querySelectorAll('.bloqueos-page .accordion-trigger'));
     const editor = document.getElementById('bloqueoInlineEditor');
     const rowNum = document.getElementById('detailRowNum');
     const area = document.getElementById('detailArea');
@@ -143,14 +641,28 @@
     const motivo = document.getElementById('detailMotivo');
     const badge = document.getElementById('detailStatusBadge');
     const comentario = document.getElementById('detailComentario');
-    const stateButtons = Array.from(document.querySelectorAll('.state-btn'));
+    const stateButtons = Array.from(document.querySelectorAll('.bloqueos-page .state-btn'));
 
     function clearSelection() {
       items.forEach(btn => {
         btn.classList.remove('is-selected');
         btn.setAttribute('aria-expanded', 'false');
       });
-      document.querySelectorAll('.bloqueo-card-shell').forEach(shell => shell.classList.remove('current-shell'));
+      document.querySelectorAll('.bloqueos-page .bloqueo-card-shell').forEach(shell => {
+        shell.classList.remove('current-shell');
+      });
+    }
+
+    function setEditorState(value) {
+      estado.value = value;
+      stateButtons.forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.value === value);
+      });
+      const badgeClass = value === 'Bloqueado' ? 'is-blocked' : 'is-clear';
+      badge.textContent = value;
+      badge.className = `status-pill ${badgeClass}`;
+      editor.classList.remove('editor-blocked', 'editor-clear');
+      editor.classList.add(value === 'Bloqueado' ? 'editor-blocked' : 'editor-clear');
     }
 
     function resetEditorCopy() {
@@ -171,93 +683,98 @@
       resetEditorCopy();
     }
 
-    function setEditorState(value) {
-      estado.value = value;
-      stateButtons.forEach(btn => {
-        const active = btn.dataset.value === value;
-        btn.classList.toggle('is-active', active);
-      });
-      const badgeClass = value === 'Bloqueado' ? 'is-blocked' : 'is-clear';
-      badge.textContent = value;
-      badge.className = `status-pill ${badgeClass}`;
-      editor.classList.remove('editor-blocked', 'editor-clear');
-      editor.classList.add(value === 'Bloqueado' ? 'editor-blocked' : 'editor-clear');
+    function updateSelectedCard(item) {
+      if (!item) return;
+      const newState = estado.value;
+      const newBadge = newState === 'Bloqueado' ? 'is-blocked' : 'is-clear';
+      const commentValue = motivo.value?.trim() || 'Sin motivo registrado';
+
+      item.dataset.estadoUi = newState;
+      item.dataset.badge = newBadge;
+      item.dataset.motivo = motivo.value?.trim() || '';
+      item.dataset.comentario = commentValue;
+
+      const commentLine = item.querySelector('.list-comment');
+      if (commentLine) commentLine.textContent = commentValue;
+
+      const pill = item.querySelector('.status-pill');
+      if (pill) {
+        pill.textContent = newState;
+        pill.className = `status-pill ${newBadge}`;
+      }
+
+      item.classList.remove('is-blocked', 'is-clear');
+      item.classList.add(newBadge);
     }
 
-    function updateSelectedCard(active) {
-      const commentValue = motivo.value || 'Sin motivo registrado';
-      active.dataset.estadoUi = estado.value;
-      active.dataset.badge = estado.value === 'Bloqueado' ? 'is-blocked' : 'is-clear';
-      active.dataset.motivo = motivo.value || '';
-      active.dataset.comentario = commentValue;
-      const commentLine = active.querySelector('.list-comment');
-      if (commentLine) commentLine.textContent = commentValue;
-      const pill = active.querySelector('.status-pill');
-      if (pill) {
-        pill.textContent = estado.value;
-        pill.className = `status-pill ${active.dataset.badge}`;
-      }
-      active.classList.remove('is-blocked', 'is-clear');
-      active.classList.add(active.dataset.badge);
-      active.closest('.bloqueo-card-shell')?.classList.toggle('is-shell-blocked', estado.value === 'Bloqueado');
+    function fillEditorFromItem(item) {
+      rowNum.value = item.dataset.rowNum || '';
+      area.textContent = item.dataset.area || 'Sin área';
+      equipo.textContent = item.dataset.equipo || 'Equipo';
+      personal.textContent = `Personal: ${item.dataset.personal || 'Eléctrico'}`;
+      responsable.textContent = item.dataset.responsable
+        ? `Responsable: ${item.dataset.responsable}`
+        : 'Responsable: Sin asignar';
+      comentario.textContent = item.dataset.comentario || 'Sin comentario registrado';
+      motivo.value = item.dataset.motivo || '';
+      setEditorState(item.dataset.estadoUi || 'No bloqueado');
     }
 
     function openEditor(item, scroll = true) {
-      clearSelection();
+      const shell = item.closest('.bloqueo-card-shell');
+      if (!shell) return;
 
+      clearSelection();
       item.classList.add('is-selected');
       item.setAttribute('aria-expanded', 'true');
-      const shell = item.closest('.bloqueo-card-shell');
       shell.classList.add('current-shell');
-      shell.insertAdjacentElement('beforeend', editor);
+      shell.appendChild(editor);
+
       editor.hidden = false;
       editor.classList.remove('editor-animate');
       void editor.offsetWidth;
       editor.classList.add('editor-animate');
 
-      rowNum.value = item.dataset.rowNum || '';
-      area.textContent = item.dataset.area || 'Sin área';
-      equipo.textContent = item.dataset.equipo || 'Equipo';
-      personal.textContent = `Personal: ${item.dataset.personal || 'Eléctrico'}`;
-      responsable.textContent = item.dataset.responsable ? `Responsable: ${item.dataset.responsable}` : 'Responsable: Sin asignar';
-      comentario.textContent = item.dataset.comentario || 'Sin comentario registrado';
-      motivo.value = item.dataset.motivo || '';
-      setEditorState(item.dataset.estadoUi || 'No bloqueado');
+      fillEditorFromItem(item);
 
       if (scroll) {
         shell.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }
 
+    items.forEach(item => {
+      item.addEventListener('click', () => {
+        const isSameItem = item.classList.contains('is-selected') && !editor.hidden;
+        if (isSameItem) {
+          closeEditor();
+          return;
+        }
+        openEditor(item);
+      });
+    });
+
     stateButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         setEditorState(btn.dataset.value);
-        const active = document.querySelector('.bloqueo-list-item.is-selected');
-        if (active) updateSelectedCard(active);
+        const active = document.querySelector('.bloqueos-page .accordion-trigger.is-selected');
+        updateSelectedCard(active);
       });
     });
 
     motivo.addEventListener('input', () => {
-      comentario.textContent = motivo.value || 'Sin comentario registrado';
-      const active = document.querySelector('.bloqueo-list-item.is-selected');
-      if (active) updateSelectedCard(active);
+      comentario.textContent = motivo.value?.trim() || 'Sin comentario registrado';
+      const active = document.querySelector('.bloqueos-page .accordion-trigger.is-selected');
+      updateSelectedCard(active);
     });
 
-    items.forEach(item => item.addEventListener('click', () => {
-      const isSameItem = item.classList.contains('is-selected') && !editor.hidden;
-      if (isSameItem) {
-        closeEditor();
-        return;
+    editor.addEventListener('submit', (e) => {
+      if (!rowNum.value) {
+        e.preventDefault();
+        alert('Primero selecciona un bloqueo.');
       }
-      openEditor(item);
-    }));
+    });
 
-    const initial = document.querySelector('.bloqueo-list-item.is-selected');
-    if (initial) {
-      openEditor(initial, false);
-    } else {
-      closeEditor();
-    }
+    closeEditor();
   })();
 </script>
 {% endblock %}
