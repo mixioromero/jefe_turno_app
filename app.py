@@ -218,6 +218,22 @@ def bloqueo_badge_class(value):
     return 'is-blocked' if value == 'Bloqueado' else 'is-clear'
 
 
+def bloqueo_bucket(area):
+    area_text = str(area or '').strip().lower()
+    if 'embarque' in area_text:
+        return 'Embarque'
+    if 'desembarque' in area_text:
+        return 'Desembarque'
+    return 'Otros'
+
+
+def bloqueos_groups(rows):
+    groups = {'Embarque': [], 'Desembarque': [], 'Otros': []}
+    for row in rows:
+        groups.setdefault(row['bucket'], []).append(row)
+    return groups
+
+
 def bloqueos_rows(ws):
     headers = get_headers(ws)
     idx = {header: headers.index(header) + 1 for header in headers}
@@ -228,15 +244,20 @@ def bloqueos_rows(ws):
         if not equipo and not area:
             continue
         estado_ui = bloqueo_estado_ui(ws.cell(row_num, idx['Estado']).value)
+        tipo_bloqueo = ws.cell(row_num, idx['Tipo bloqueo']).value or ''
+        personal = 'Eléctrico' if str(tipo_bloqueo).strip().lower() in {'', 'mecánico', 'mecanico'} else str(tipo_bloqueo)
         rows.append({
             'row_num': row_num,
+            'bucket': bloqueo_bucket(area),
             'area': area or 'Sin área',
             'equipo': equipo or 'Sin equipo',
-            'tipo_bloqueo': ws.cell(row_num, idx['Tipo bloqueo']).value or '',
+            'tipo_bloqueo': tipo_bloqueo,
+            'personal': personal,
             'responsable': ws.cell(row_num, idx['Responsable']).value or '',
             'estado_ui': estado_ui,
             'estado_badge': bloqueo_badge_class(estado_ui),
             'motivo': ws.cell(row_num, idx['Motivo']).value or '',
+            'obs': ws.cell(row_num, idx['Obs']).value or '',
         })
     return rows
 
@@ -266,6 +287,7 @@ def bloqueos_activos():
     idx_estado = headers.index('Estado') + 1
     idx_motivo = headers.index('Motivo') + 1
     idx_hora_liberacion = headers.index('Hora liberación') + 1
+    idx_tipo_bloqueo = headers.index('Tipo bloqueo') + 1
 
     if request.method == 'POST':
         row_num = int(request.form.get('row_num'))
@@ -274,6 +296,7 @@ def bloqueos_activos():
 
         ws.cell(row_num, idx_estado, bloqueo_estado_excel(estado_ui))
         ws.cell(row_num, idx_motivo, motivo if motivo else None)
+        ws.cell(row_num, idx_tipo_bloqueo, 'Eléctrico')
         if estado_ui == 'No bloqueado':
             ws.cell(row_num, idx_hora_liberacion, datetime.now().time().replace(second=0, microsecond=0))
         else:
@@ -281,13 +304,20 @@ def bloqueos_activos():
 
         wb.save(EXCEL_PATH)
         flash('Bloqueo actualizado correctamente.', 'success')
-        return redirect(url_for('bloqueos_activos'))
+        return redirect(url_for('bloqueos_activos', selected=row_num))
+
+    rows = bloqueos_rows(ws)
+    selected = request.args.get('selected', type=int)
+    if not selected and rows:
+        selected = rows[0]['row_num']
 
     return render_template(
         'bloqueos.html',
         title='Bloqueos Activos',
         icon='🔒',
-        rows=bloqueos_rows(ws),
+        rows=rows,
+        groups=bloqueos_groups(rows),
+        selected_row=selected,
     )
 
 
