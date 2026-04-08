@@ -62,9 +62,14 @@
               data-comentario="{{ row.comentario }}"
               data-badge="{{ row.estado_badge }}">
               <div class="list-main">
-                <strong>{{ row.equipo }}</strong>
-                <span>{{ row.area }}</span>
-                <small class="list-comment">{{ row.comentario }}</small>
+                <div class="list-topline">
+                  <strong>{{ row.equipo }}</strong>
+                  <span class="list-area">{{ row.area }}</span>
+                </div>
+                <div class="list-comment-box">
+                  <span class="list-comment-label">Motivo</span>
+                  <small class="list-comment">{{ row.motivo if row.motivo else (row.obs if row.obs else 'Sin motivo registrado') }}</small>
+                </div>
               </div>
               <span class="status-pill {{ row.estado_badge }}">{{ row.estado_ui }}</span>
             </button>
@@ -149,7 +154,7 @@
       equipo.textContent = item.dataset.equipo || 'Equipo';
       personal.textContent = `Personal: ${item.dataset.personal || 'Eléctrico'}`;
       responsable.textContent = item.dataset.responsable ? `Responsable: ${item.dataset.responsable}` : 'Responsable: Sin asignar';
-      comentario.textContent = item.dataset.comentario || 'Sin comentario registrado';
+      comentario.textContent = item.dataset.comentario || 'Sin motivo registrado';
       estado.value = item.dataset.estadoUi || 'No bloqueado';
       motivo.value = item.dataset.motivo || '';
       badge.textContent = item.dataset.estadoUi || 'Estado';
@@ -159,12 +164,12 @@
     }
 
     motivo.addEventListener('input', () => {
-      comentario.textContent = motivo.value || 'Sin comentario registrado';
+      comentario.textContent = motivo.value || 'Sin motivo registrado';
       const active = document.querySelector('.bloqueo-list-item.is-selected');
       if (active) {
-        active.dataset.comentario = motivo.value || 'Sin comentario registrado';
+        active.dataset.comentario = motivo.value || 'Sin motivo registrado';
         const commentLine = active.querySelector('.list-comment');
-        if (commentLine) commentLine.textContent = motivo.value || 'Sin comentario registrado';
+        if (commentLine) commentLine.textContent = motivo.value || 'Sin motivo registrado';
       }
     });
 
@@ -177,9 +182,9 @@
       if (active) {
         active.dataset.estadoUi = estado.value;
         active.dataset.badge = badgeClass;
-        active.dataset.comentario = motivo.value || 'Sin comentario registrado';
+        active.dataset.comentario = motivo.value || 'Sin motivo registrado';
         const commentLine = active.querySelector('.list-comment');
-        if (commentLine) commentLine.textContent = motivo.value || 'Sin comentario registrado';
+        if (commentLine) commentLine.textContent = motivo.value || 'Sin motivo registrado';
         const pill = active.querySelector('.status-pill');
         pill.textContent = estado.value;
         pill.className = `status-pill ${badgeClass}`;
