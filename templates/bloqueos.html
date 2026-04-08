@@ -5,7 +5,7 @@
   <div class="bloqueos-hero-head">
     <div>
       <h2>{{ icon }} {{ title }}</h2>
-      <p class="muted">Selecciona un bloqueo desde la lista y abajo podrás modificar su estado y motivo operativo.</p>
+      <p class="muted">Toca un equipo para desplegar su edición debajo de la tarjeta y actualizar estado o motivo de forma rápida.</p>
     </div>
   </div>
 
@@ -20,22 +20,22 @@
     <article class="summary-card success">
       <span class="summary-label">No bloqueados</span>
       <strong>{{ libres }}</strong>
-      <small>Disponibles</small>
+      <small>Disponibles para operar</small>
     </article>
     <article class="summary-card neutral">
       <span class="summary-label">Personal</span>
       <strong>Eléctrico</strong>
-      <small>Aplicado en este módulo</small>
+      <small>Asignado al módulo</small>
     </article>
   </div>
 </section>
 
-<section class="bloqueos-shell bloqueos-master-detail">
-  <div class="bloqueos-master panel">
+<section class="bloqueos-shell bloqueos-accordion-layout">
+  <div class="panel bloqueos-accordion-panel">
     <div class="section-head compact-head">
       <div>
-        <h3>Lista de bloqueos</h3>
-        <p class="muted">Toca un equipo para abrir su edición inferior.</p>
+        <h3>Bloqueos por área</h3>
+        <p class="muted">Selecciona el equipo que quieras actualizar. El editor se abrirá justo debajo de su tarjeta.</p>
       </div>
     </div>
 
@@ -47,32 +47,38 @@
           <span class="group-count">{{ group_rows|length }}</span>
         </div>
 
-        <div class="bloqueo-list">
+        <div class="bloqueo-stack">
           {% for row in group_rows %}
-            <button
-              type="button"
-              class="bloqueo-list-item {{ row.estado_badge }} {% if row.row_num == selected_row %}is-selected{% endif %}"
-              data-row-num="{{ row.row_num }}"
-              data-equipo="{{ row.equipo }}"
-              data-area="{{ row.area }}"
-              data-personal="Eléctrico"
-              data-responsable="{{ row.responsable }}"
-              data-estado-ui="{{ row.estado_ui }}"
-              data-motivo="{{ row.motivo }}"
-              data-comentario="{{ row.comentario }}"
-              data-badge="{{ row.estado_badge }}">
-              <div class="list-main">
-                <div class="list-topline">
-                  <strong>{{ row.equipo }}</strong>
-                  <span class="list-area">{{ row.area }}</span>
+            <article class="bloqueo-card-shell {% if row.row_num == selected_row %}current-shell{% endif %}" data-shell-row="{{ row.row_num }}">
+              <button
+                type="button"
+                class="bloqueo-list-item accordion-trigger {{ row.estado_badge }} {% if row.row_num == selected_row %}is-selected{% endif %}"
+                aria-expanded="{{ 'true' if row.row_num == selected_row else 'false' }}"
+                data-row-num="{{ row.row_num }}"
+                data-equipo="{{ row.equipo }}"
+                data-area="{{ row.area }}"
+                data-personal="Eléctrico"
+                data-responsable="{{ row.responsable }}"
+                data-estado-ui="{{ row.estado_ui }}"
+                data-motivo="{{ row.motivo }}"
+                data-comentario="{{ row.comentario }}"
+                data-badge="{{ row.estado_badge }}">
+                <div class="list-main">
+                  <div class="list-topline">
+                    <strong>{{ row.equipo }}</strong>
+                    <span class="list-area">{{ row.area }}</span>
+                  </div>
+                  <div class="list-motive-wrap">
+                    <span class="mini-label">Motivo</span>
+                    <small class="list-comment">{{ row.comentario }}</small>
+                  </div>
                 </div>
-                <div class="list-comment-box">
-                  <span class="list-comment-label">Motivo</span>
-                  <small class="list-comment">{{ row.motivo if row.motivo else (row.obs if row.obs else 'Sin motivo registrado') }}</small>
+                <div class="list-side">
+                  <span class="status-pill {{ row.estado_badge }}">{{ row.estado_ui }}</span>
+                  <span class="expand-indicator" aria-hidden="true">▾</span>
                 </div>
-              </div>
-              <span class="status-pill {{ row.estado_badge }}">{{ row.estado_ui }}</span>
-            </button>
+              </button>
+            </article>
           {% else %}
             <div class="list-empty">Sin equipos en {{ group_name|lower }}.</div>
           {% endfor %}
@@ -80,60 +86,54 @@
       </div>
     {% endfor %}
   </div>
+</section>
 
-  <div class="bloqueos-detail panel">
-    <div class="section-head compact-head">
-      <div>
-        <h3>Edición del bloqueo</h3>
-        <p class="muted">La selección se refleja aquí y luego puedes guardar el cambio.</p>
+<form method="post" class="bloqueo-inline-editor panel" id="bloqueoInlineEditor" hidden>
+  <input type="hidden" name="row_num" id="detailRowNum" value="{{ selected_row or '' }}">
+
+  <div class="inline-editor-head">
+    <div>
+      <div class="detail-kicker" id="detailArea">Selecciona un bloqueo</div>
+      <h3 id="detailEquipo">Equipo</h3>
+      <div class="detail-meta">
+        <span class="meta-chip" id="detailPersonal">Personal: Eléctrico</span>
+        <span class="meta-chip soft" id="detailResponsable">Responsable</span>
       </div>
     </div>
-
-    <form method="post" class="bloqueo-detail-form" id="bloqueoDetailForm">
-      <input type="hidden" name="row_num" id="detailRowNum" value="{{ selected_row or '' }}">
-
-      <div class="detail-top-card">
-        <div>
-          <div class="detail-kicker" id="detailArea">Selecciona un bloqueo</div>
-          <h3 id="detailEquipo">Equipo</h3>
-          <div class="detail-meta">
-            <span class="meta-chip" id="detailPersonal">Personal: Eléctrico</span>
-            <span class="meta-chip soft" id="detailResponsable">Responsable</span>
-          </div>
-          <p class="detail-comment" id="detailComentario">Sin comentario registrado</p>
-        </div>
-        <span class="status-pill" id="detailStatusBadge">Estado</span>
-      </div>
-
-      <div class="detail-form-grid">
-        <div class="field">
-          <label for="detailEstado">Estado del bloqueo</label>
-          <div class="select-shell" id="detailSelectShell">
-            <select id="detailEstado" name="estado_ui">
-              <option value="Bloqueado">Bloqueado</option>
-              <option value="No bloqueado">No bloqueado</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field full">
-          <label for="detailMotivo">Motivo del bloqueo</label>
-          <textarea id="detailMotivo" name="motivo" rows="5" placeholder="Ej.: mantenimiento eléctrico, revisión de motor, aislamiento, inspección...
-"></textarea>
-          <p class="field-help">Se guarda el estado y el motivo; el personal queda como <strong>Eléctrico</strong>.</p>
-        </div>
-      </div>
-
-      <div class="actions sticky-actions bloqueo-actions">
-        <button class="btn" type="submit">Guardar actualización</button>
-      </div>
-    </form>
+    <span class="status-pill" id="detailStatusBadge">Estado</span>
   </div>
-</section>
+
+  <p class="detail-comment" id="detailComentario">Sin comentario registrado</p>
+
+  <div class="detail-form-grid inline-grid">
+    <div class="field compact-field">
+      <label for="detailEstado">Estado del bloqueo</label>
+      <div class="state-toggle" id="stateToggle">
+        <button type="button" class="state-btn is-active" data-value="Bloqueado">Bloqueado</button>
+        <button type="button" class="state-btn" data-value="No bloqueado">No bloqueado</button>
+      </div>
+      <select id="detailEstado" name="estado_ui" class="hidden-select" tabindex="-1" aria-hidden="true">
+        <option value="Bloqueado">Bloqueado</option>
+        <option value="No bloqueado">No bloqueado</option>
+      </select>
+    </div>
+
+    <div class="field full compact-field">
+      <label for="detailMotivo">Motivo del bloqueo</label>
+      <textarea id="detailMotivo" name="motivo" rows="4" placeholder="Ej.: mantenimiento eléctrico, revisión de motor, aislamiento, inspección..."></textarea>
+      <p class="field-help">El cambio se guarda directamente en el registro seleccionado.</p>
+    </div>
+  </div>
+
+  <div class="actions sticky-actions bloqueo-actions inline-actions">
+    <button class="btn" type="submit">Guardar actualización</button>
+  </div>
+</form>
 
 <script>
   (() => {
     const items = Array.from(document.querySelectorAll('.bloqueo-list-item'));
+    const editor = document.getElementById('bloqueoInlineEditor');
     const rowNum = document.getElementById('detailRowNum');
     const area = document.getElementById('detailArea');
     const equipo = document.getElementById('detailEquipo');
@@ -142,63 +142,89 @@
     const estado = document.getElementById('detailEstado');
     const motivo = document.getElementById('detailMotivo');
     const badge = document.getElementById('detailStatusBadge');
-    const shell = document.getElementById('detailSelectShell');
     const comentario = document.getElementById('detailComentario');
+    const stateButtons = Array.from(document.querySelectorAll('.state-btn'));
 
-    function applyState(item) {
-      items.forEach(btn => btn.classList.remove('is-selected'));
+    function setEditorState(value) {
+      estado.value = value;
+      stateButtons.forEach(btn => {
+        const active = btn.dataset.value === value;
+        btn.classList.toggle('is-active', active);
+      });
+      const badgeClass = value === 'Bloqueado' ? 'is-blocked' : 'is-clear';
+      badge.textContent = value;
+      badge.className = `status-pill ${badgeClass}`;
+      editor.classList.remove('editor-blocked', 'editor-clear');
+      editor.classList.add(value === 'Bloqueado' ? 'editor-blocked' : 'editor-clear');
+    }
+
+    function updateSelectedCard(active) {
+      const commentValue = motivo.value || 'Sin motivo registrado';
+      active.dataset.estadoUi = estado.value;
+      active.dataset.badge = estado.value === 'Bloqueado' ? 'is-blocked' : 'is-clear';
+      active.dataset.motivo = motivo.value || '';
+      active.dataset.comentario = commentValue;
+      const commentLine = active.querySelector('.list-comment');
+      if (commentLine) commentLine.textContent = commentValue;
+      const pill = active.querySelector('.status-pill');
+      if (pill) {
+        pill.textContent = estado.value;
+        pill.className = `status-pill ${active.dataset.badge}`;
+      }
+      active.classList.remove('is-blocked', 'is-clear');
+      active.classList.add(active.dataset.badge);
+      active.closest('.bloqueo-card-shell')?.classList.toggle('is-shell-blocked', estado.value === 'Bloqueado');
+    }
+
+    function openEditor(item, scroll = true) {
+      items.forEach(btn => {
+        btn.classList.remove('is-selected');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+      document.querySelectorAll('.bloqueo-card-shell').forEach(shell => shell.classList.remove('current-shell'));
+
       item.classList.add('is-selected');
+      item.setAttribute('aria-expanded', 'true');
+      const shell = item.closest('.bloqueo-card-shell');
+      shell.classList.add('current-shell');
+      shell.insertAdjacentElement('beforeend', editor);
+      editor.hidden = false;
+      editor.classList.remove('editor-animate');
+      void editor.offsetWidth;
+      editor.classList.add('editor-animate');
 
       rowNum.value = item.dataset.rowNum || '';
       area.textContent = item.dataset.area || 'Sin área';
       equipo.textContent = item.dataset.equipo || 'Equipo';
       personal.textContent = `Personal: ${item.dataset.personal || 'Eléctrico'}`;
       responsable.textContent = item.dataset.responsable ? `Responsable: ${item.dataset.responsable}` : 'Responsable: Sin asignar';
-      comentario.textContent = item.dataset.comentario || 'Sin motivo registrado';
-      estado.value = item.dataset.estadoUi || 'No bloqueado';
+      comentario.textContent = item.dataset.comentario || 'Sin comentario registrado';
       motivo.value = item.dataset.motivo || '';
-      badge.textContent = item.dataset.estadoUi || 'Estado';
-      badge.className = `status-pill ${item.dataset.badge || ''}`;
-      shell.className = `select-shell ${item.dataset.badge || ''}`;
-      document.getElementById('bloqueoDetailForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setEditorState(item.dataset.estadoUi || 'No bloqueado');
+
+      if (scroll) {
+        shell.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }
+
+    stateButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        setEditorState(btn.dataset.value);
+        const active = document.querySelector('.bloqueo-list-item.is-selected');
+        if (active) updateSelectedCard(active);
+      });
+    });
 
     motivo.addEventListener('input', () => {
       comentario.textContent = motivo.value || 'Sin motivo registrado';
       const active = document.querySelector('.bloqueo-list-item.is-selected');
-      if (active) {
-        active.dataset.comentario = motivo.value || 'Sin motivo registrado';
-        const commentLine = active.querySelector('.list-comment');
-        if (commentLine) commentLine.textContent = motivo.value || 'Sin motivo registrado';
-      }
+      if (active) updateSelectedCard(active);
     });
 
-    estado.addEventListener('change', () => {
-      const badgeClass = estado.value === 'Bloqueado' ? 'is-blocked' : 'is-clear';
-      badge.textContent = estado.value;
-      badge.className = `status-pill ${badgeClass}`;
-      shell.className = `select-shell ${badgeClass}`;
-      const active = document.querySelector('.bloqueo-list-item.is-selected');
-      if (active) {
-        active.dataset.estadoUi = estado.value;
-        active.dataset.badge = badgeClass;
-        active.dataset.comentario = motivo.value || 'Sin motivo registrado';
-        const commentLine = active.querySelector('.list-comment');
-        if (commentLine) commentLine.textContent = motivo.value || 'Sin motivo registrado';
-        const pill = active.querySelector('.status-pill');
-        pill.textContent = estado.value;
-        pill.className = `status-pill ${badgeClass}`;
-        active.classList.remove('is-blocked', 'is-clear');
-        active.classList.add(badgeClass);
-      }
-    });
-
-    items.forEach(item => item.addEventListener('click', () => applyState(item)));
+    items.forEach(item => item.addEventListener('click', () => openEditor(item)));
 
     const initial = document.querySelector('.bloqueo-list-item.is-selected') || items[0];
-    if (initial) {
-      applyState(initial);
-    }
+    if (initial) openEditor(initial, false);
   })();
 </script>
 {% endblock %}
