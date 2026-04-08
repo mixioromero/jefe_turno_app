@@ -145,6 +145,32 @@
     const comentario = document.getElementById('detailComentario');
     const stateButtons = Array.from(document.querySelectorAll('.state-btn'));
 
+    function clearSelection() {
+      items.forEach(btn => {
+        btn.classList.remove('is-selected');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+      document.querySelectorAll('.bloqueo-card-shell').forEach(shell => shell.classList.remove('current-shell'));
+    }
+
+    function resetEditorCopy() {
+      rowNum.value = '';
+      area.textContent = 'Selecciona un bloqueo';
+      equipo.textContent = 'Equipo';
+      personal.textContent = 'Personal: Eléctrico';
+      responsable.textContent = 'Responsable: Sin asignar';
+      comentario.textContent = 'Sin comentario registrado';
+      motivo.value = '';
+      setEditorState('Bloqueado');
+    }
+
+    function closeEditor() {
+      clearSelection();
+      editor.hidden = true;
+      editor.classList.remove('editor-animate', 'editor-blocked', 'editor-clear');
+      resetEditorCopy();
+    }
+
     function setEditorState(value) {
       estado.value = value;
       stateButtons.forEach(btn => {
@@ -177,11 +203,7 @@
     }
 
     function openEditor(item, scroll = true) {
-      items.forEach(btn => {
-        btn.classList.remove('is-selected');
-        btn.setAttribute('aria-expanded', 'false');
-      });
-      document.querySelectorAll('.bloqueo-card-shell').forEach(shell => shell.classList.remove('current-shell'));
+      clearSelection();
 
       item.classList.add('is-selected');
       item.setAttribute('aria-expanded', 'true');
@@ -216,15 +238,26 @@
     });
 
     motivo.addEventListener('input', () => {
-      comentario.textContent = motivo.value || 'Sin motivo registrado';
+      comentario.textContent = motivo.value || 'Sin comentario registrado';
       const active = document.querySelector('.bloqueo-list-item.is-selected');
       if (active) updateSelectedCard(active);
     });
 
-    items.forEach(item => item.addEventListener('click', () => openEditor(item)));
+    items.forEach(item => item.addEventListener('click', () => {
+      const isSameItem = item.classList.contains('is-selected') && !editor.hidden;
+      if (isSameItem) {
+        closeEditor();
+        return;
+      }
+      openEditor(item);
+    }));
 
-    const initial = document.querySelector('.bloqueo-list-item.is-selected') || items[0];
-    if (initial) openEditor(initial, false);
+    const initial = document.querySelector('.bloqueo-list-item.is-selected');
+    if (initial) {
+      openEditor(initial, false);
+    } else {
+      closeEditor();
+    }
   })();
 </script>
 {% endblock %}
